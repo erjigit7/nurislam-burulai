@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="ky">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Үйлөнүү тоюна чакыруу</title>
+<meta name="theme-color" content="#fbfaf8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#fbfaf8; --paper-2:#f6f2ed; --ink:#2d2928; --muted:#766d69;
+  --wine:#760d1d; --wine-2:#9e2a3d; --blush:#f3dcd5; --gold:#b89a6a;
+  --serif:"Cormorant Garamond", Georgia, serif;
+  --script:"Great Vibes", "Brush Script MT", cursive;
+  --soft:cubic-bezier(.22,.8,.24,1);
+  --silk:cubic-bezier(.65,.05,.25,1);
+}
+@property --r{syntax:"<percentage>";inherits:false;initial-value:0%}
+@property --w{syntax:"<percentage>";inherits:false;initial-value:0%}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--paper);
+  background-image:repeating-linear-gradient(93deg,rgba(111,91,78,.025) 0 1px,transparent 1px 9px);
+  color:var(--ink); font-family:var(--serif); font-size:19px; line-height:1.55;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden; font-variant-numeric:lining-nums;
+}
+body.locked{overflow:hidden}
+button,input{font:inherit;color:inherit}
+
+/* ================= Petal canvas & progress ================= */
+#petals{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
+.progress{position:fixed;top:0;left:0;right:0;height:2px;z-index:40;transform-origin:left;transform:scaleX(0);
+  background:linear-gradient(90deg,var(--wine),var(--gold))}
+
+/* ================= Sparkles ================= */
+.sparks{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.spark{position:absolute;width:4px;height:4px;border-radius:50%;opacity:0;
+  background:radial-gradient(#fff8e2,#d9b97c 55%,transparent 72%);box-shadow:0 0 8px 2px rgba(217,185,124,.4);
+  animation:twinkle var(--dur) ease-in-out var(--del) infinite}
+@keyframes twinkle{0%,100%{opacity:0;transform:translateY(0) scale(.3)}50%{opacity:.95;transform:translateY(-18px) scale(1)}}
+
+/* ================= Envelope intro ================= */
+.intro{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background-color:var(--paper);
+  background-image:radial-gradient(ellipse at 50% 45%,#fffdfa 0,transparent 60%),repeating-linear-gradient(93deg,rgba(111,91,78,.025) 0 1px,transparent 1px 9px);
+  transition:opacity 1.2s ease, visibility 0s linear 1.2s}
+.intro.done{opacity:0;visibility:hidden}
+.env-float{animation:float 5s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-10px)}}
+.envelope{position:relative;display:block;width:min(74vw,310px,52vh);aspect-ratio:10/16;margin-top:12vh;cursor:pointer;border:0;padding:0;background:none;perspective:1400px;
+  transition:transform 1.4s var(--silk), opacity 1.2s ease}
+.envelope::before{content:"";position:absolute;left:8%;right:8%;bottom:-26px;height:30px;border-radius:50%;
+  background:radial-gradient(rgba(70,45,35,.28),transparent 70%);filter:blur(4px);animation:shadow 5s ease-in-out infinite}
+@keyframes shadow{50%{transform:scale(.9);opacity:.7}}
+.env-back{position:absolute;inset:0;background:linear-gradient(180deg,#e9e2da,#f1ece6);box-shadow:0 0 0 1px rgba(0,0,0,.05)}
+.letter{position:absolute;left:6%;right:6%;top:5%;height:80%;z-index:2;background:#fffefb;
+  box-shadow:0 1px 0 rgba(0,0,0,.04),0 -8px 24px -12px rgba(70,45,35,.25);
+  display:flex;flex-direction:column;align-items:center;padding-top:14%;text-align:center;
+  transition:transform 1.5s var(--silk), opacity 1s ease, filter 1s ease}
+.letter::before{content:"";position:absolute;inset:8px;border:1px solid rgba(118,13,29,.18)}
+.letter .mini-k{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted)}
+.letter .names{margin:10px 0 6px}
+.letter .names span{font-size:38px}
+.letter .names i{font-size:22px;margin:0}
+.letter .mini-d{font-size:14px;letter-spacing:.3em;color:var(--muted)}
+.env-front{position:absolute;inset:0;z-index:3;clip-path:polygon(0 0,50% 54%,100% 0,100% 100%,0 100%);
+  background:linear-gradient(165deg,#fffefc,#efeae4)}
+.env-front svg{position:absolute;inset:0;width:100%;height:100%}
+.env-front path{fill:none;stroke:rgba(90,70,60,.2);stroke-width:.5}
+.env-flap{position:absolute;left:0;right:0;top:0;height:54%;z-index:4;transform-origin:top;
+  transition:transform 1.1s var(--silk), z-index 0s linear .5s}
+.env-flap::before{content:"";position:absolute;inset:0;clip-path:polygon(0 0,100% 0,50% 100%);
+  background:linear-gradient(180deg,#fffefb,#f1ede7)}
+.env-flap::after{content:"";position:absolute;left:0;right:0;top:100%;height:10px;clip-path:polygon(0 0,100% 0,50% 0);}
+.seal{position:absolute;left:50%;top:54%;width:88px;height:88px;margin:-44px 0 0 -44px;z-index:5;
+  filter:drop-shadow(0 6px 10px rgba(80,10,20,.35));transition:transform .25s ease}
+.seal::before{content:"";position:absolute;inset:-40%;border-radius:50%;opacity:0;
+  background:radial-gradient(rgba(255,236,200,.95),rgba(217,185,124,.35) 40%,transparent 70%)}
+.seal .half{position:absolute;inset:0;border-radius:49% 51% 48% 52%/52% 48% 52% 48%;display:grid;place-items:center;
+  color:#f9e8df;overflow:hidden;
+  background:radial-gradient(circle at 35% 30%,#b3263b,#760d1d 55%,#4e0612);
+  box-shadow:inset 0 -3px 6px rgba(0,0,0,.3),inset 0 2px 3px rgba(255,200,200,.25);
+  transition:transform 1.1s cubic-bezier(.5,0,.75,.4), opacity 1s ease .2s}
+.seal .half::before{content:"";position:absolute;inset:8px;border-radius:50%;border:1px solid rgba(249,232,223,.45)}
+.seal .mono{font-family:var(--script);font-size:23px;line-height:1;white-space:nowrap;transform:translateY(-.16em)}
+.seal .l{clip-path:polygon(0 0,53% 0,46% 28%,56% 47%,43% 70%,51% 100%,0 100%)}
+.seal .r{clip-path:polygon(53% 0,100% 0,100% 100%,51% 100%,43% 70%,56% 47%,46% 28%)}
+.seal-glow{animation:sealPulse 2.6s ease-in-out infinite}
+@keyframes sealPulse{50%{filter:drop-shadow(0 6px 10px rgba(80,10,20,.35)) drop-shadow(0 0 14px rgba(179,38,59,.35))}}
+.envelope:hover .seal{transform:scale(1.06)}
+.intro-hint{position:absolute;bottom:max(30px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;
+  color:var(--muted);font-size:17px;letter-spacing:.04em;animation:pulse 2.4s ease-in-out infinite;transition:opacity .6s}
+@keyframes pulse{50%{opacity:.45}}
+
+/* stage 1: seal breaks */
+.intro.s1 .env-float{animation-play-state:paused}
+.intro.s1 .intro-hint{opacity:0;animation:none}
+.intro.s1 .seal{transform:scale(.9);animation:none}
+.intro.s1 .seal::before{animation:glow 1.2s ease-out forwards}
+@keyframes glow{0%{opacity:0;transform:scale(.3)}30%{opacity:1}100%{opacity:0;transform:scale(1.8)}}
+.intro.s1 .seal .l{transform:translate(-46px,70px) rotate(-38deg);opacity:0}
+.intro.s1 .seal .r{transform:translate(44px,80px) rotate(34deg);opacity:0}
+/* stage 2: flap opens */
+.intro.s2 .env-flap{transform:rotateX(180deg);z-index:1}
+/* stage 3: letter rises */
+.intro.s3 .letter{transform:translateY(-42%)}
+/* stage 4: envelope leaves, letter dissolves */
+.intro.s4 .envelope{transform:translateY(12vh) scale(.94)}
+.intro.s4 .env-back,.intro.s4 .env-front,.intro.s4 .env-flap,.intro.s4 .envelope::before{transition:opacity 1s ease;opacity:0}
+.intro.s4 .letter{transform:translateY(-52%) scale(1.25);opacity:0;filter:blur(10px)}
+
+/* ================= Layout ================= */
+.shell{max-width:520px;margin:0 auto;position:relative;background:var(--paper);box-shadow:0 0 80px rgba(80,60,50,.08);overflow:hidden}
+section{position:relative;padding:72px 28px;text-align:center}
+.content{position:relative;z-index:1}
+.script{font-family:var(--serif);font-style:italic;color:var(--wine);font-weight:500;font-size:clamp(40px,11vw,50px);line-height:1.1;margin:0 0 18px;letter-spacing:-.01em}
+.kg-names .names span{font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(46px,13vw,58px)}
+.kicker{text-transform:uppercase;letter-spacing:.32em;font-size:14px;color:var(--muted);margin:0}
+p{margin:0 0 14px}
+.muted{color:var(--muted)}
+
+/* ================= Flowers ================= */
+.flora{position:absolute;pointer-events:none;z-index:0;transform:translate3d(0,var(--py,0px),0) var(--t,rotate(0deg));will-change:transform}
+.flora img{display:block;width:100%;height:auto}
+.bloom{--r:0%;opacity:0;scale:.72;rotate:-10deg;transform-origin:var(--ox,30%) var(--oy,30%);
+  -webkit-mask-image:radial-gradient(circle at var(--ox,30%) var(--oy,30%),#000 var(--r),transparent calc(var(--r) + 24%));
+          mask-image:radial-gradient(circle at var(--ox,30%) var(--oy,30%),#000 var(--r),transparent calc(var(--r) + 24%));
+  transition:--r 3.2s cubic-bezier(.4,0,.2,1) var(--d,0s), scale 3s var(--soft) var(--d,0s), rotate 3s var(--soft) var(--d,0s), opacity 1.4s ease var(--d,0s)}
+.flora.in .bloom{--r:150%;opacity:1;scale:1;rotate:0deg}
+.flora.sway img{animation:sway 8s ease-in-out infinite;transform-origin:var(--ox,30%) var(--oy,30%)}
+@keyframes sway{50%{transform:rotate(2deg) scale(1.01)}}
+
+/* ================= Scroll reveal primitives ================= */
+[data-a]{transition-delay:var(--d,0s)}
+[data-a=up]{opacity:0;transform:translateY(30px);filter:blur(6px);
+  transition:opacity 1.3s ease var(--d,0s), transform 1.5s var(--soft) var(--d,0s), filter 1.3s ease var(--d,0s)}
+[data-a=up].in{opacity:1;transform:none;filter:blur(0)}
+/* «протяжка» маской, а не обрезкой: обрезанный элемент считается невидимым и не запускает появление */
+[data-a=wipe]{--w:0%;filter:blur(4px);opacity:.2;line-height:1.4;
+  -webkit-mask-image:linear-gradient(90deg,#000 var(--w),transparent calc(var(--w) + 14%));
+          mask-image:linear-gradient(90deg,#000 var(--w),transparent calc(var(--w) + 14%));
+  transition:--w 2s var(--silk) var(--d,0s), filter 1.8s ease var(--d,0s), opacity 1s ease var(--d,0s)}
+[data-a=wipe].in{--w:115%;filter:blur(0);opacity:1}
+.ch{display:inline-block;opacity:0;filter:blur(6px);transform:translateY(9px);
+  transition:opacity .9s ease, filter .9s ease, transform 1s var(--soft);transition-delay:calc(var(--c) * 45ms + var(--d,0s))}
+.in .ch,.in.ch{opacity:1;filter:blur(0);transform:none}
+
+/* frame that draws itself */
+.frame{position:relative;padding:40px 26px;background:rgba(255,253,250,0);transition:background-color 1.6s ease .4s}
+.frame::before,.frame::after{content:"";position:absolute;pointer-events:none;border:1px solid rgba(118,13,29,.2)}
+.frame::before{inset:0;clip-path:inset(0 100% 100% 0);transition:clip-path 1.8s var(--silk)}
+.frame::after{inset:-7px;border-color:rgba(118,13,29,.1);clip-path:inset(100% 0 0 100%);transition:clip-path 2.2s var(--silk) .3s}
+.frame.in{background-color:rgba(255,253,250,.86)}
+.frame.in::before,.frame.in::after{clip-path:inset(0)}
+
+/* ================= Hero ================= */
+.hero{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px 110px}
+.plaque{position:relative;width:min(84vw,348px);padding:64px 18px 58px;z-index:1}
+.plaque>svg{position:absolute;inset:0;width:100%;height:100%;z-index:-1;overflow:visible}
+.plaque>svg path{fill:#fffefb;fill-opacity:0;stroke:rgba(118,13,29,.3);stroke-width:1.4;stroke-dasharray:1;stroke-dashoffset:1;
+  transition:stroke-dashoffset 3.2s var(--silk) .1s, fill-opacity 2s ease 1s}
+.hero-on .plaque>svg path{stroke-dashoffset:0;fill-opacity:.92}
+.names{font-family:var(--script);font-weight:400;color:var(--wine);margin:14px 0 18px;line-height:1}
+.names span{display:block;font-size:clamp(40px,12.5vw,64px)}
+.names i{display:block;font-style:normal;font-size:34px;margin:4px 0;color:var(--gold);
+  background:linear-gradient(110deg,#a88a5a 35%,#f6e7c4 50%,#a88a5a 65%);background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 5s ease-in-out infinite}
+@keyframes shimmer{0%{background-position:100% 0}60%,100%{background-position:0 0}}
+.hero .names span{clip-path:inset(-30% 100% -30% -12%);filter:blur(5px);opacity:.2;
+  transition:clip-path 2.2s var(--silk), filter 2s ease, opacity 1.2s ease}
+.hero .names span:first-child{transition-delay:1.1s}
+.hero .names span:last-child{transition-delay:2.1s}
+.hero .names i{opacity:0;scale:.4;transition:opacity 1.2s ease 1.8s, scale 1.4s cubic-bezier(.3,1.5,.5,1) 1.8s}
+.hero-on .hero .names span{clip-path:inset(-30% -12% -30% -12%);filter:blur(0);opacity:1}
+.hero-on .hero .names i{opacity:1;scale:1}
+.hero .kicker{--d:.5s}
+.hero-on .hero .kicker .ch{opacity:1;filter:blur(0);transform:none}
+.hero-date{display:flex;align-items:center;justify-content:center;gap:14px;text-transform:uppercase;letter-spacing:.2em;font-size:14px;color:var(--muted)}
+.hero-date span{border-top:1px solid rgba(118,13,29,.3);border-bottom:1px solid rgba(118,13,29,.3);padding:5px 0;min-width:78px;flex:1 1 0;text-align:center;
+  clip-path:inset(0 50% 0 50%);transition:clip-path 1.6s var(--silk) 2.8s}
+.hero-date b{font-size:54px;font-weight:500;color:var(--ink);letter-spacing:0;line-height:1;
+  opacity:0;scale:1.5;filter:blur(8px);transition:opacity 1.2s ease 2.6s, scale 1.6s var(--soft) 2.6s, filter 1.4s ease 2.6s}
+.hero-on .hero-date span{clip-path:inset(0 0 0 0)}
+.hero-on .hero-date b{opacity:1;scale:1;filter:blur(0)}
+.year{letter-spacing:.5em;margin:10px 0 0;color:var(--muted);font-size:15px}
+.hero .year{opacity:0;letter-spacing:1.2em;transition:opacity 1.6s ease 3.3s, letter-spacing 2.2s var(--soft) 3.3s}
+.hero-on .hero .year{opacity:1;letter-spacing:.5em}
+.scroll-cue{position:absolute;bottom:26px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);opacity:0;transform:translateY(10px);
+  transition:opacity 1.2s ease 4.2s, transform 1.2s ease 4.2s;z-index:1}
+.hero-on .scroll-cue{opacity:1;transform:none}
+.scroll-cue i{width:9px;height:9px;border-right:1.5px solid var(--wine);border-bottom:1.5px solid var(--wine);transform:rotate(45deg);opacity:.2;animation:chev 1.8s infinite}
+.scroll-cue i:nth-of-type(2){animation-delay:.2s}.scroll-cue i:nth-of-type(3){animation-delay:.4s}
+@keyframes chev{40%{opacity:1}}
+
+/* ================= Calendar ================= */
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px 2px;margin:8px auto 22px;max-width:330px}
+.calendar .wd{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding-bottom:8px;border-bottom:1px solid rgba(118,13,29,.14);margin-bottom:6px;
+  opacity:0;transition:opacity 1s ease calc(var(--i) * 60ms)}
+.calendar .d{position:relative;height:38px;display:grid;place-items:center;font-size:19px;
+  opacity:0;transform:translateY(8px) scale(.8);transition:opacity .7s ease, transform .9s var(--soft);transition-delay:calc(.3s + var(--i) * 28ms)}
+.calendar.in .wd,.calendar.in .d{opacity:1;transform:none}
+.calendar .d.we{font-weight:600}
+.calendar .d.we b{position:relative;z-index:1;color:#fff}
+.calendar .d .heart{position:absolute;width:46px;height:42px;left:50%;top:50%;margin:-21px 0 0 -23px;transform:scale(0) rotate(-25deg)}
+.calendar .d .heart path{fill:var(--wine)}
+.calendar.in .d .heart{animation:heartIn 1.1s cubic-bezier(.3,1.6,.5,1) calc(1.4s + var(--i) * 28ms) both, beat 1.9s ease-in-out calc(2.6s + var(--i) * 28ms) infinite}
+@keyframes heartIn{from{transform:scale(0) rotate(-25deg)}to{transform:scale(1) rotate(0)}}
+@keyframes beat{0%,100%{transform:scale(1)}14%{transform:scale(1.14)}28%{transform:scale(1)}42%{transform:scale(1.08)}}
+.fh{position:absolute;left:50%;top:30%;font-style:normal;font-size:11px;color:#c9616f;opacity:0;pointer-events:none}
+.calendar.in .fh{animation:rise 3.6s ease-out infinite}
+@keyframes rise{0%{opacity:0;transform:translate(-50%,0) scale(.4)}20%{opacity:.85}100%{opacity:0;transform:translate(calc(-50% + var(--x)),-70px) scale(1.1) rotate(var(--x))}}
+.cal-date{font-size:22px;font-weight:500;margin-bottom:6px}
+
+/* ================= Divider ================= */
+.divider{display:block;width:220px;margin:0 auto;height:auto;overflow:visible}
+.divider path{fill:none;stroke:var(--wine);stroke-width:1;opacity:.55;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 2.4s var(--silk)}
+.divider .leaf,.divider .bud{stroke:none;opacity:0;scale:0;transform-origin:180px 26px;transition:opacity 1s ease 1.4s, scale 1.2s cubic-bezier(.3,1.5,.5,1) 1.4s}
+.divider .leaf{fill:#8a9270}.divider .bud{fill:var(--wine);transition-delay:1.8s}
+.divider.in path{stroke-dashoffset:0}
+.divider.in .leaf{opacity:.8;scale:1}.divider.in .bud{opacity:.85;scale:1}
+
+/* ================= Timeline ================= */
+.timeline{position:relative;margin:26px auto 0;max-width:340px;text-align:left}
+.timeline::before{content:"";position:absolute;left:84px;top:8px;bottom:8px;width:1px;transform:scaleY(0);transform-origin:top;
+  background:linear-gradient(transparent,rgba(118,13,29,.35) 12%,rgba(118,13,29,.35) 88%,transparent);transition:transform 2.4s var(--silk) .2s}
+.timeline.in::before{transform:scaleY(1)}
+.tl-item{display:grid;grid-template-columns:70px 1fr;gap:30px;align-items:center;padding:14px 0;position:relative;
+  opacity:0;transform:translateX(-18px);filter:blur(4px);transition:all 1.2s var(--soft) calc(.5s + var(--i) * 280ms)}
+.timeline.in .tl-item{opacity:1;transform:none;filter:blur(0)}
+.tl-item time{font-size:24px;font-weight:600;color:var(--wine);text-align:right}
+.tl-item::after{content:"";position:absolute;left:80px;top:50%;width:9px;height:9px;margin-top:-5px;border-radius:50%;background:var(--paper);border:1.5px solid var(--wine);
+  scale:0;transition:scale .8s cubic-bezier(.3,1.8,.5,1) calc(.8s + var(--i) * 280ms)}
+.timeline.in .tl-item::after{scale:1;animation:dot 3s ease-in-out calc(2s + var(--i) * .5s) infinite}
+@keyframes dot{0%,100%{box-shadow:0 0 0 0 rgba(118,13,29,.25)}50%{box-shadow:0 0 0 6px rgba(118,13,29,0)}}
+.tl-item span{font-size:20px}
+
+/* ================= Location ================= */
+.venue-type{letter-spacing:.3em;text-transform:uppercase;font-size:13px;color:var(--muted);margin:0}
+.venue-name{font-size:36px;font-weight:500;margin:4px 0 8px;line-height:1.15}
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:10px;margin-top:18px;padding:14px 30px;border:0;cursor:pointer;
+  background:var(--wine);color:#fff9f4;text-decoration:none;text-transform:uppercase;letter-spacing:.2em;font-size:14px;font-weight:600;
+  border-radius:40px;box-shadow:0 10px 22px -12px rgba(118,13,29,.8);transition:transform .3s var(--soft), background .3s, box-shadow .3s}
+.btn::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.32) 50%,transparent 70%);
+  transform:translateX(-120%);animation:shine 5s ease-in-out 3s infinite}
+@keyframes shine{0%{transform:translateX(-120%)}28%,100%{transform:translateX(120%)}}
+.btn:hover{background:#8e1528;transform:translateY(-2px);box-shadow:0 16px 28px -14px rgba(118,13,29,.8)}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:transparent;color:var(--wine);box-shadow:inset 0 0 0 1px var(--wine)}
+.btn.ghost::after{background:linear-gradient(105deg,transparent 30%,rgba(118,13,29,.12) 50%,transparent 70%)}
+.btn.ghost:hover{background:rgba(118,13,29,.06)}
+.pin{animation:pin 2.6s ease-in-out infinite}
+@keyframes pin{0%,55%,100%{transform:translateY(0)}65%{transform:translateY(-5px)}75%{transform:translateY(0)}83%{transform:translateY(-2px)}}
+
+/* ================= Countdown ================= */
+.countdown{color:#f9e8df;padding:70px 20px;overflow:hidden;
+  background:linear-gradient(150deg,#7e1020,#4f0a17,#6f0b1a,#3f0712);background-size:300% 300%;animation:velvet 16s ease-in-out infinite}
+@keyframes velvet{50%{background-position:100% 100%}}
+.countdown .script{color:#f9e8df;font-size:clamp(38px,10vw,48px)}
+.bokeh{position:absolute;border-radius:50%;background:radial-gradient(rgba(249,232,223,.16),transparent 70%);animation:drift var(--dur) ease-in-out var(--del) infinite alternate}
+@keyframes drift{to{transform:translate(var(--x),var(--y)) scale(1.3)}}
+.cd{display:flex;justify-content:center;gap:10px;margin-top:10px;perspective:600px}
+.cd div{width:72px;padding:12px 0;border:1px solid rgba(249,232,223,.3);border-radius:10px;background:rgba(255,255,255,.05);overflow:hidden;
+  opacity:0;transform:rotateX(-90deg);transform-origin:top;transition:opacity .8s ease calc(.4s + var(--i) * 150ms), transform 1.2s cubic-bezier(.3,1.4,.5,1) calc(.4s + var(--i) * 150ms)}
+.cd.in div{opacity:1;transform:none}
+.cd b{display:block;font-size:36px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums lining-nums}
+.cd b.tick{animation:tick .6s var(--soft)}
+@keyframes tick{from{transform:translateY(-40%);opacity:0;filter:blur(3px)}}
+.cd small{font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.75}
+.cd-done{font-size:24px;margin-top:10px}
+
+/* ================= RSVP ================= */
+.field{text-align:left;margin:18px 0}
+.lbl{display:block;font-size:14px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.field input[type=text]{width:100%;padding:10px 2px;border:0;border-bottom:1px solid rgba(45,41,40,.3);background:transparent;font-size:21px;outline:none;
+  background-image:linear-gradient(var(--wine),var(--wine));background-size:0 1.5px;background-repeat:no-repeat;background-position:0 100%;transition:background-size .6s var(--soft)}
+.field input[type=text]:focus{background-size:100% 1.5px}
+.choice{display:flex;align-items:center;gap:12px;padding:9px 0;cursor:pointer;font-size:19px;transition:transform .3s var(--soft)}
+.choice:hover{transform:translateX(4px)}
+.choice input{appearance:none;width:20px;height:20px;border:1.5px solid var(--wine);border-radius:50%;margin:0;flex:none;display:grid;place-items:center;cursor:pointer}
+.choice input::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--wine);transform:scale(0);transition:transform .35s cubic-bezier(.3,1.8,.5,1)}
+.choice input:checked::after{transform:scale(1)}
+.err{color:#b3263b;font-size:16px;min-height:22px;margin:0}
+.err.shake{animation:shake .5s}
+@keyframes shake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+.note{font-size:15px;color:var(--muted);margin-top:14px}
+
+/* ================= Final ================= */
+.final{padding:90px 28px 110px}
+.final .names span{font-size:clamp(46px,13vw,58px)}
+
+/* ================= Music ================= */
+.music{position:fixed;right:max(16px,calc(50% - 244px));bottom:18px;z-index:20;width:48px;height:48px;border-radius:50%;border:0;cursor:pointer;
+  background:rgba(255,253,250,.92);box-shadow:0 6px 18px -6px rgba(0,0,0,.3),inset 0 0 0 1px rgba(118,13,29,.2);display:grid;place-items:center}
+.music[hidden]{display:none}
+.music svg{width:22px;height:22px;fill:var(--wine)}
+.music.on svg{animation:spin 4s linear infinite}
+.music.hint{animation:callout 1.6s ease-in-out infinite}
+@keyframes callout{50%{box-shadow:0 6px 18px -6px rgba(0,0,0,.3),inset 0 0 0 1px rgba(118,13,29,.2),0 0 0 10px rgba(118,13,29,.12)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* при системном «уменьшить движение» оставляем мягкие появления, убираем бесконечные покачивания */
+@media (prefers-reduced-motion:reduce){
+  .flora.sway img,.env-float,.envelope::before,.bokeh,.spark{animation:none}
+}
+</style>
+</head>
+<body class="locked">
+
+<!-- ======================================================================
+     НАСТРОЙКИ — меняйте только этот блок
+     ====================================================================== -->
+<script>
+const CONFIG = {
+  groom: "Нурдоолот",
+  bride: "Арууке",
+  date: "2026-10-04T16:00:00",          // дата и время начала (местное время)
+  weekday: "Жекшемби",
+  monthName: "Октябрь",                 // для заставки и календаря
+  dateText: "2026-жылдын 4-октябры",
+
+  greeting: "Урматтуу коноктор!",
+  invitation: [
+    "Сиздерди жашообуздагы эң маанилүү жана бактылуу күн — жаңы үй-бүлөнүн түптөлүшүнүн кубанычын биз менен бөлүшүүгө чын жүрөктөн чакырабыз.",
+    "Бул кечти сиздер менен бирге өткөрсөк, абдан бактылуу болобуз."
+  ],
+
+  hostName: "Бурулкан",                 // от чьего имени приглашение (в конце страницы)
+
+  schedule: [
+    ["16:00", "Конокторду тосуп алуу"],
+    ["16:30", "Тойдун башталышы"],
+    ["17:00", "Майрамдык дасторкон"],
+    ["20:00", "Бий жана куттуктоолор"]
+  ],
+
+  venueType: "Ресторан",
+  venueName: "«Элегант»",
+  address: ["Куршаб айылы"],
+  mapUrl: "https://go.2gis.com/LUpAP",  // ссылка на место в 2GIS
+
+  phone: "+996 772 468 840",            // для звонка и WhatsApp
+  music: "music.mp3",                   // ссылка на mp3 (или путь к файлу рядом), пусто = без кнопки музыки
+  autoOpenSeconds: 5                    // через сколько секунд конверт откроется сам, если никто не нажал (0 = не открывать)
+};
+</script>
+
+<canvas id="petals"></canvas>
+<div class="progress" id="progress"></div>
+
+<div class="intro" id="intro">
+  <div class="sparks" data-sparks="18"></div>
+  <div class="env-float">
+    <button class="envelope" id="envelope" aria-label="Чакырууну ачуу">
+      <div class="env-back"></div>
+      <div class="letter" aria-hidden="true">
+        <span class="mini-k">Тойго чакыруу</span>
+        <div class="names"><span data-t="groom"></span><i>&amp;</i><span data-t="bride"></span></div>
+        <span class="mini-d" id="miniDate"></span>
+      </div>
+      <div class="env-front"><svg viewBox="0 0 100 160" preserveAspectRatio="none"><path d="M0 160 L50 96 L100 160"/></svg></div>
+      <div class="env-flap"></div>
+      <div class="seal seal-glow"><div class="half l"></div><div class="half r"></div></div>
+    </button>
+  </div>
+  <div class="intro-hint">Ачуу үчүн мөөрдү басыңыз</div>
+</div>
+
+<main class="shell" id="app">
+  <section class="hero">
+    <div class="sparks" data-sparks="14"></div>
+    <div class="flora sway hero-flora" data-bouquet="corner" style="left:-70px;top:-50px;width:300px;--d:.1s"></div>
+    <div class="flora hero-flora" data-bouquet="corner" style="right:-80px;bottom:10px;width:280px;--t:rotate(180deg);--d:.9s"></div>
+    <div class="plaque">
+      <svg viewBox="0 0 400 610" preserveAspectRatio="none"><path pathLength="1" d="M92 20C92 10 104 4 116 9C141 18 166 5 200 5C234 5 259 18 284 9C296 4 308 10 308 20C308 45 320 57 343 59C356 60 362 74 355 85C345 102 348 124 368 137C381 146 381 165 368 174C350 187 350 213 369 226C382 235 382 254 369 263C350 276 350 302 369 315C382 324 382 343 369 352C350 365 350 391 369 404C382 413 382 432 369 441C350 454 348 481 366 495C378 505 376 524 362 531C335 545 318 563 309 590C306 601 294 607 284 601C258 586 232 604 200 604C168 604 142 586 116 601C106 607 94 601 91 590C82 563 65 545 38 531C24 524 22 505 34 495C52 481 50 454 31 441C18 432 18 413 31 404C50 391 50 365 31 352C18 343 18 324 31 315C50 302 50 276 31 263C18 254 18 235 31 226C50 213 50 187 32 174C19 165 19 146 32 137C52 124 55 102 45 85C38 74 44 60 57 59C80 57 92 45 92 20Z"/></svg>
+      <p class="kicker" data-split>Тойго чакыруу</p>
+      <h1 class="names"><span data-t="groom"></span><i>&amp;</i><span data-t="bride"></span></h1>
+      <div class="hero-date"><span data-t="weekday"></span><b id="heroDay"></b><span data-t="monthName"></span></div>
+      <p class="year" id="heroYear"></p>
+    </div>
+    <div class="scroll-cue"><span>Төмөн сүрүңүз</span><i></i><i></i><i></i></div>
+  </section>
+
+  <section>
+    <div class="flora sway" data-bouquet="hang" style="right:-40px;top:-30px;width:180px"></div>
+    <div class="frame content" data-a="frame">
+      <p class="script" data-a="wipe" data-t="greeting" style="--d:.5s"></p>
+      <div id="invitation"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="flora" data-bouquet="corner" style="left:-90px;bottom:-40px;width:230px"></div>
+    <div class="content">
+      <p class="script" data-a="wipe" data-t="monthName"></p>
+      <div class="calendar" id="calendar" data-a="cal"></div>
+      <p class="cal-date" data-a="up" data-t="dateText" style="--d:.6s"></p>
+      <p class="muted" data-a="up" style="--d:.8s">Бул күндү биз үчүн сактап коюңуздар ♡</p>
+    </div>
+  </section>
+
+  <svg class="divider" data-a="draw" viewBox="0 0 360 68" aria-hidden="true"><path pathLength="1" d="M16 34C88 34 110 25 148 34C166 38 174 38 180 34C186 30 194 30 212 34C250 43 272 34 344 34"/><path class="leaf" d="M173 22C159 17 152 24 159 30C166 32 171 28 173 22ZM187 22C201 17 208 24 201 30C194 32 189 28 187 22Z"/><path class="bud" d="M180 18C172 12 174 4 180 8C186 4 188 12 180 18Z"/></svg>
+
+  <section style="background:var(--paper-2)">
+    <div class="content">
+      <p class="kicker" id="tlDate" data-split data-a="letters"></p>
+      <p class="script" data-a="wipe" style="margin-top:6px;--d:.3s">Той программасы</p>
+      <div class="timeline" id="timeline" data-a="tl"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="flora" data-bouquet="corner" style="right:-90px;top:-40px;width:240px;--t:scaleX(-1)"></div>
+    <div class="frame content" data-a="frame">
+      <p class="script" data-a="wipe" style="--d:.4s">Той өтүүчү жер</p>
+      <p class="venue-type" data-split data-a="letters" data-t="venueType" style="--d:.9s"></p>
+      <p class="venue-name" data-a="up" data-t="venueName" style="--d:1.1s"></p>
+      <p id="address" data-a="up" style="--d:1.3s"></p>
+      <div data-a="up" style="--d:1.5s">
+        <a class="btn" id="mapBtn" target="_blank" rel="noopener">
+          <svg class="pin" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5Z"/></svg>
+          2GIS'тен ачуу</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="countdown">
+    <div id="bokeh"></div>
+    <div class="content">
+      <p class="script" data-a="wipe">Тойго чейин калды:</p>
+      <div class="cd" id="cd" data-a="cd">
+        <div style="--i:0"><b id="cdD">00</b><small>күн</small></div>
+        <div style="--i:1"><b id="cdH">00</b><small>саат</small></div>
+        <div style="--i:2"><b id="cdM">00</b><small>мүнөт</small></div>
+        <div style="--i:3"><b id="cdS">00</b><small>секунд</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="content">
+      <p class="script" data-a="wipe">Суроолоруңуз барбы?</p>
+      <p data-a="up" style="--d:.3s">Эгер суроолоруңуз болсо, бизге жазыңыздар — кубануу менен жооп беребиз.</p>
+      <div data-a="up" style="--d:.5s"><a class="btn ghost" id="callBtn"></a></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="flora sway" data-bouquet="hang" style="right:-40px;top:-30px;width:170px"></div>
+    <div class="frame content" data-a="frame">
+      <p class="script" data-a="wipe" style="--d:.4s">Анкета</p>
+      <p data-a="up" style="--d:.7s">Өзгөчө күнүбүзгө даярдана алышыбыз үчүн катышарыңызды ырастап коюуңузду өтүнөбүз.</p>
+      <form id="rsvp" novalidate data-a="up" style="--d:.9s">
+        <div class="field">
+          <label class="lbl" for="guestName">Сиздин атыңыз</label>
+          <input type="text" id="guestName" autocomplete="name" placeholder="Аты-жөнүңүз">
+        </div>
+        <div class="field">
+          <span class="lbl">Катышасызбы?</span>
+          <label class="choice"><input type="radio" name="ans" value="Сөзсүз келем"> Сөзсүз келем</label>
+          <label class="choice"><input type="radio" name="ans" value="Жубайым менен келем"> Жубайым менен келем</label>
+          <label class="choice"><input type="radio" name="ans" value="Тилекке каршы, келе албайм"> Тилекке каршы, келе албайм</label>
+        </div>
+        <p class="err" id="err"></p>
+        <button class="btn" type="submit">Катышууну ырастоо</button>
+        <p class="note">Ырастоо WhatsApp аркылуу жөнөтүлөт.</p>
+      </form>
+    </div>
+  </section>
+
+  <section class="final" id="final">
+    <div class="sparks" data-sparks="10"></div>
+    <div class="flora" data-bouquet="corner" style="left:-80px;bottom:-40px;width:260px"></div>
+    <div class="flora" data-bouquet="corner" style="right:-80px;top:-40px;width:230px;--t:rotate(180deg);--d:.6s"></div>
+    <div class="content">
+      <p class="muted" data-a="up">Урматтоо менен,</p>
+      <h2 class="names"><span data-a="wipe" data-t="hostName" style="--d:.3s"></span></h2>
+      <p class="script" data-a="wipe" style="font-size:40px;margin:10px 0 4px;--d:1.3s">Сиздерди күтөбүз!</p>
+      <p class="year" id="finalDate" data-a="up" style="--d:1.9s"></p>
+    </div>
+  </section>
+</main>
+
+<button class="music" id="musicBtn" hidden aria-label="Музыка"><svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6Z"/></svg></button>
+
+<script>
+(function(){
+  const C = CONFIG, $ = id => document.getElementById(id);
+  const wedding = new Date(C.date);
+  const pad = n => String(n).padStart(2,"0");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const rand = (a,b) => a + Math.random()*(b-a);
+
+  // ---------- text fill
+  document.querySelectorAll("[data-t]").forEach(el => el.textContent = C[el.dataset.t]);
+  document.title = `${C.groom} & ${C.bride} — үйлөнүү тою, ${C.dateText}`;
+  document.querySelectorAll(".seal .half").forEach(h => h.innerHTML = `<span class="mono">${C.groom[0]}&amp;${C.bride[0]}</span>`);
+  if (/[үөңҮӨҢ]/.test(C.groom + C.bride + C.hostName)) document.body.classList.add("kg-names");
+  const dmy = `${pad(wedding.getDate())}.${pad(wedding.getMonth()+1)}.${wedding.getFullYear()}`;
+  $("miniDate").textContent = dmy;
+  $("heroDay").textContent = wedding.getDate();
+  $("heroYear").textContent = wedding.getFullYear();
+  $("tlDate").textContent = wedding.getDate() + " " + C.monthName;
+  $("finalDate").textContent = dmy;
+  $("invitation").innerHTML = C.invitation.map((t,i) => `<p data-a="up" style="--d:${1 + i*.35}s">${t}</p>`).join("");
+  $("timeline").innerHTML = C.schedule.map(([t,s],i) => `<div class="tl-item" style="--i:${i}"><time>${t}</time><span>${s}</span></div>`).join("");
+  $("address").innerHTML = C.address.join("<br>");
+  $("mapBtn").href = C.mapUrl;
+  const digits = C.phone.replace(/\D/g,"");
+  $("callBtn").href = "tel:+" + digits;
+  $("callBtn").textContent = C.phone;
+
+  // ---------- split letters
+  document.querySelectorAll("[data-split]").forEach(el => {
+    el.innerHTML = [...el.textContent].map((ch,i) => `<span class="ch" style="--c:${i}">${ch === " " ? "&nbsp;" : ch}</span>`).join("");
+  });
+
+  // ---------- sparkles & bokeh
+  document.querySelectorAll("[data-sparks]").forEach(box => {
+    let h = "";
+    for (let i = 0; i < +box.dataset.sparks; i++)
+      h += `<i class="spark" style="left:${rand(4,96)}%;top:${rand(5,95)}%;--dur:${rand(3,6).toFixed(1)}s;--del:${rand(0,5).toFixed(1)}s;scale:${rand(.6,1.3).toFixed(2)}"></i>`;
+    box.innerHTML = h;
+  });
+  $("bokeh").innerHTML = Array.from({length:7}, () => {
+    const s = rand(60,160);
+    return `<i class="bokeh" style="width:${s}px;height:${s}px;left:${rand(-10,90)}%;top:${rand(-20,80)}%;--x:${rand(-40,40)}px;--y:${rand(-30,30)}px;--dur:${rand(7,13)}s;--del:${rand(-6,0)}s"></i>`;
+  }).join("");
+
+  // ---------- calendar (Monday first)
+  const y = wedding.getFullYear(), m = wedding.getMonth();
+  const first = (new Date(y,m,1).getDay() + 6) % 7, days = new Date(y,m+1,0).getDate();
+  let cal = ["Дш","Шш","Шр","Бш","Жм","Иш","Жк"].map((w,i) => `<span class="wd" style="--i:${i}">${w}</span>`).join("");
+  cal += "<span></span>".repeat(first);
+  for (let d = 1; d <= days; d++) {
+    const i = first + d;
+    cal += d === wedding.getDate()
+      ? `<span class="d we" style="--i:${i}"><svg class="heart" viewBox="0 0 64 58"><path d="M32 55C26 48 5 35 3 20C1 7 17-1 27 8L32 13L37 8C47-1 63 7 61 20C59 35 38 48 32 55Z"/></svg><b>${d}</b>`
+        + [-18,14,-6,22].map((x,k) => `<i class="fh" style="--x:${x}px;animation-delay:${3 + k*.9}s">♥</i>`).join("") + `</span>`
+      : `<span class="d" style="--i:${i}">${d}</span>`;
+  }
+  $("calendar").innerHTML = cal;
+
+  // ---------- countdown
+  function setNum(id, v){ const el = $(id); if (el.textContent !== v) { el.textContent = v; el.classList.remove("tick"); void el.offsetWidth; el.classList.add("tick"); } }
+  function tick(){
+    let s = Math.max(0, Math.floor((wedding - Date.now())/1000));
+    if (s === 0) { $("cd").outerHTML = '<p class="cd-done">Той башталды! 🎉</p>'; return; }
+    setNum("cdD", pad(Math.floor(s/86400))); s %= 86400;
+    setNum("cdH", pad(Math.floor(s/3600))); s %= 3600;
+    setNum("cdM", pad(Math.floor(s/60)));
+    setNum("cdS", pad(s % 60));
+    setTimeout(tick, 1000);
+  }
+  tick();
+
+  // ---------- RSVP -> WhatsApp
+  $("rsvp").addEventListener("submit", e => {
+    e.preventDefault();
+    const name = $("guestName").value.trim();
+    const ans = (document.querySelector("input[name=ans]:checked") || {}).value;
+    const err = $("err");
+    const fail = t => { err.textContent = t; err.classList.remove("shake"); void err.offsetWidth; err.classList.add("shake"); };
+    if (!name) return fail("Атыңызды жазыңыз");
+    if (!ans) return fail("Жоопту тандаңыз");
+    err.textContent = "";
+    const r = e.submitter ? e.submitter.getBoundingClientRect() : null;
+    if (r) Petals.burst(r.left + r.width/2, r.top, 26);
+    const msg = `Салам! Мен, ${name}. ${C.groom} & ${C.bride} — үйлөнүү тою (${C.dateText}): ${ans}.`;
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(msg)}`, "_blank");
+  });
+
+  // ---------- music
+  // Браузеры не дают включить звук без касания пользователя: если конверт открылся сам,
+  // музыка стартует при первом касании страницы.
+  const Music = (() => {
+    if (!C.music) return { start(){} };
+    const audio = new Audio(C.music), btn = $("musicBtn");
+    audio.loop = true; audio.preload = "metadata"; audio.volume = 0;
+    let wanted = false, userPaused = false, fadeT = null, resumeOnShow = false;
+    btn.hidden = false;
+    const fadeTo = (target, ms, done) => {
+      clearInterval(fadeT);
+      const from = audio.volume, t0 = performance.now();
+      fadeT = setInterval(() => {
+        const k = Math.min(1, (performance.now() - t0) / ms);
+        audio.volume = from + (target - from) * k;
+        if (k === 1) { clearInterval(fadeT); done && done(); }
+      }, 50);
+    };
+    const play = () => audio.play().then(() => { btn.classList.add("on"); btn.classList.remove("hint"); fadeTo(.7, 3000); disarm(); })
+                                   .catch(() => btn.classList.add("hint"));
+    const onGesture = () => { if (wanted && !userPaused && audio.paused) play(); };
+    const gestures = ["pointerdown", "touchend", "keydown"];
+    const disarm = () => gestures.forEach(g => removeEventListener(g, onGesture, true));
+    btn.onclick = e => {
+      e.stopPropagation();
+      if (audio.paused) { userPaused = false; wanted = true; play(); }
+      else { userPaused = true; btn.classList.remove("on"); fadeTo(0, 500, () => audio.pause()); }
+    };
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) { resumeOnShow = !audio.paused; audio.pause(); }
+      else if (resumeOnShow) audio.play().catch(()=>{});
+    });
+    return {
+      start(){ wanted = true; gestures.forEach(g => addEventListener(g, onGesture, true)); play(); }
+    };
+  })();
+
+  // ---------- falling petals
+  const Petals = (() => {
+    const cv = $("petals"), ctx = cv.getContext("2d");
+    const COLORS = [["#fbe9e3","#e7b3b8"],["#f3d3d2","#c77b87"],["#e5a9b1","#a8445a"],["#a02d42","#6a0c1c"],["#fff4ee","#efcfc6"]];
+    let list = [], W = 0, H = 0, running = false, ambient = false;
+    function resize(){ const dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W*dpr; cv.height = H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); }
+    addEventListener("resize", resize); resize();
+    function add(o){
+      list.push(Object.assign({ s:rand(5,11), r:rand(0,6.28), vr:rand(-.04,.04), f:rand(0,6.28), vf:rand(.02,.07),
+        sw:rand(.6,1.6), ph:rand(0,6.28), c:COLORS[Math.floor(Math.random()*COLORS.length)], a:rand(.65,.95) }, o));
+      if (!running) { running = true; requestAnimationFrame(step); }
+    }
+    function step(t){
+      ctx.clearRect(0,0,W,H);
+      if (ambient && list.length < 5 && Math.random() < .012) add({ x:rand(0,W), y:-20, vx:rand(-.3,.3), vy:rand(.4,.8), s:rand(4,8), a:rand(.35,.6) });
+      list = list.filter(p => {
+        p.vy = Math.min(p.vy + .03, 1.1 + p.s*.06);
+        p.vx *= .985;
+        p.x += p.vx + Math.sin(t*.0012*p.sw + p.ph) * .7;
+        p.y += p.vy; p.r += p.vr; p.f += p.vf;
+        const s = p.s;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.scale(1, .3 + .7*Math.abs(Math.cos(p.f)));
+        ctx.globalAlpha = p.a;
+        const g = ctx.createLinearGradient(0,-s,0,s); g.addColorStop(0,p.c[0]); g.addColorStop(1,p.c[1]);
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.moveTo(0,-s);
+        ctx.bezierCurveTo(s*.95,-s*.55, s*.6,s*.85, 0,s);
+        ctx.bezierCurveTo(-s*.6,s*.85, -s*.95,-s*.55, 0,-s);
+        ctx.fill();
+        ctx.globalAlpha = p.a*.35; ctx.strokeStyle = p.c[1]; ctx.lineWidth = .6;
+        ctx.beginPath(); ctx.moveTo(0,-s*.7); ctx.quadraticCurveTo(s*.15,0,0,s*.8); ctx.stroke();
+        ctx.restore();
+        return p.y < H + 30 && p.x > -40 && p.x < W + 40;
+      });
+      if (list.length || ambient) requestAnimationFrame(step); else { running = false; ctx.clearRect(0,0,W,H); }
+    }
+    return {
+      burst(x, y, n){ for (let i = 0; i < n; i++) { const a = rand(-Math.PI*.95, -Math.PI*.05), sp = rand(1.5,6.5); add({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - rand(1,3) }); } },
+      rain(n){ for (let i = 0; i < n; i++) add({ x:rand(0,W), y:-rand(10, H*.9), vx:rand(-.4,.4), vy:rand(.5,1.2) }); },
+      ambient(on){ if (reduced) return; ambient = on; if (on && !running) { running = true; requestAnimationFrame(step); } }
+    };
+  })();
+
+  // ---------- envelope opening sequence
+  const intro = $("intro");
+  let opened = false;
+  function openInvite(){
+    if (opened) return; opened = true;
+    clearTimeout(autoOpen);
+    const at = (ms, fn) => setTimeout(fn, ms);
+    intro.classList.add("s1");
+    Music.start();
+    at(500,  () => intro.classList.add("s2"));
+    at(1350, () => intro.classList.add("s3"));
+    at(1900, () => { const r = document.querySelector(".letter").getBoundingClientRect(); Petals.burst(r.left + r.width/2, r.top + 20, 46); });
+    at(3000, () => { intro.classList.add("s4"); document.body.classList.remove("locked"); document.body.classList.add("hero-on");
+                     document.querySelectorAll(".hero-flora").forEach(f => f.classList.add("in")); });
+    at(3500, () => { intro.classList.add("done"); Petals.rain(18); });
+    at(5200, () => { intro.remove(); Petals.ambient(true); });
+  }
+  $("envelope").addEventListener("click", openInvite);
+  const autoOpen = C.autoOpenSeconds > 0 ? setTimeout(openInvite, C.autoOpenSeconds * 1000) : null;
+
+  // ---------- reveal on scroll
+  const io = new IntersectionObserver(es => es.forEach(en => {
+    if (!en.isIntersecting) return;
+    en.target.classList.add("in"); io.unobserve(en.target);
+    if (en.target.id === "final") Petals.rain(34);
+  }), { threshold:.18, rootMargin:"0px 0px -6% 0px" });
+  document.querySelectorAll("[data-a], .flora:not(.hero-flora), #final").forEach(el => io.observe(el));
+
+  // ---------- parallax & progress
+  let ticking = false;
+  const floras = [...document.querySelectorAll(".flora")];
+  function onScroll(){
+    const vh = innerHeight;
+    floras.forEach(f => {
+      const r = f.parentElement.getBoundingClientRect();
+      if (r.bottom < -200 || r.top > vh + 200) return;
+      f.style.setProperty("--py", ((r.top + r.height/2 - vh/2) * -.09).toFixed(1) + "px");
+    });
+    const max = document.documentElement.scrollHeight - vh;
+    $("progress").style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+    ticking = false;
+  }
+  if (!reduced) addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive:true });
+
+  // ---------- watercolor flowers (rendered once to images)
+  let seed = 7;
+  const rnd = (a,b) => { seed = (seed*16807) % 2147483647; return a + (seed/2147483647)*(b-a); };
+  const PAL = {
+    wine:  ["#4e0612","#7a1024","#a8354a"],
+    rose:  ["#8f3a4e","#b86476","#e0a9b2"],
+    blush: ["#c9979e","#e8c4c3","#fbece6"]
+  };
+  const defs = `<defs>
+    <filter id="wc" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="3"/>
+      <feDisplacementMap in="SourceGraphic" scale="4"/>
+    </filter>
+    ${Object.entries(PAL).map(([k,c]) => `<radialGradient id="g-${k}" cx="50%" cy="60%" r="65%"><stop offset="0" stop-color="${c[0]}"/><stop offset=".55" stop-color="${c[1]}"/><stop offset="1" stop-color="${c[2]}"/></radialGradient>`).join("")}
+    <linearGradient id="g-leaf" x1="0" x2="1"><stop offset="0" stop-color="#5f6b48"/><stop offset="1" stop-color="#a3ab86"/></linearGradient>
+    <linearGradient id="g-euc" x1="0" x2="1"><stop offset="0" stop-color="#7d8f86"/><stop offset="1" stop-color="#b4c2ba"/></linearGradient>
+  </defs>`;
+
+  function rose(x, y, r, pal){
+    const c = PAL[pal]; let g = `<g transform="translate(${x} ${y}) rotate(${rnd(0,360)})">`;
+    const rings = [[8, 1, c[2], .95],[7,.78,c[1],.95],[5,.55,c[1],1],[4,.36,c[0],1]];
+    rings.forEach(([n, k, col, op], ri) => {
+      const off = rnd(0,60);
+      for (let i = 0; i < n; i++) {
+        const a = off + i*360/n, rr = r*k;
+        g += `<ellipse cx="0" cy="${-rr*.5}" rx="${rr*.62}" ry="${rr*.62}" transform="rotate(${a})" fill="${ri===0?`url(#g-${pal})`:col}" fill-opacity="${op}" stroke="${c[0]}" stroke-opacity=".25" stroke-width=".6"/>`;
+      }
+    });
+    g += `<path d="M${-r*.18} 0 a${r*.18} ${r*.18} 0 1 1 ${r*.3} ${r*.05} a${r*.1} ${r*.1} 0 1 1 ${-r*.16} ${-r*.08}" fill="none" stroke="${c[0]}" stroke-width="1.2" opacity=".8"/>`;
+    return g + "</g>";
+  }
+  function leaf(x, y, len, ang){
+    const w = len*.32;
+    return `<g transform="translate(${x} ${y}) rotate(${ang})"><path d="M0 0C${len*.3} ${-w} ${len*.75} ${-w} ${len} 0C${len*.75} ${w} ${len*.3} ${w} 0 0Z" fill="url(#g-leaf)" opacity=".9"/><path d="M2 0L${len*.9} 0" stroke="#4d573a" stroke-width=".8" opacity=".6"/></g>`;
+  }
+  function eucalyptus(x, y, len, ang){
+    let g = `<g transform="translate(${x} ${y}) rotate(${ang})"><path d="M0 0Q${len/2} ${len*.08} ${len} 0" stroke="#6d7a6f" stroke-width="1.3" fill="none"/>`;
+    for (let t = .15; t < 1; t += .17) {
+      const s = 9 - t*4;
+      g += `<ellipse cx="${len*t}" cy="${-s}" rx="${s}" ry="${s*.85}" fill="url(#g-euc)" opacity=".85"/><ellipse cx="${len*t+6}" cy="${s}" rx="${s}" ry="${s*.85}" fill="url(#g-euc)" opacity=".75"/>`;
+    }
+    return g + "</g>";
+  }
+  function berries(x, y, ang){
+    let g = `<g transform="translate(${x} ${y}) rotate(${ang})"><path d="M0 0Q20 -4 44 -10" stroke="#5a4038" stroke-width=".9" fill="none"/>`;
+    [[18,-6],[30,-12],[44,-10],[36,-2],[26,2]].forEach(([bx,by]) => g += `<line x1="${bx*.6}" y1="${by*.3}" x2="${bx}" y2="${by}" stroke="#5a4038" stroke-width=".6"/><circle cx="${bx}" cy="${by}" r="3.2" fill="#5b0a18"/><circle cx="${bx-1}" cy="${by-1}" r="1" fill="#fff" opacity=".45"/>`);
+    return g + "</g>";
+  }
+  const svgImg = (vb, body) => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}">${defs}<g filter="url(#wc)">${body}</g></svg>`);
+
+  const BOUQUETS = {
+    corner: { ox:"33%", oy:"36%", src:(() => { seed = 11; return svgImg("0 0 300 300", `
+        ${eucalyptus(60,70,170,28)}${eucalyptus(70,60,150,62)}
+        ${leaf(95,95,70,5)}${leaf(95,100,68,75)}${leaf(140,80,55,-20)}${leaf(80,140,60,105)}
+        ${berries(120,115,20)}${berries(110,125,70)}
+        ${rose(140,118,30,"blush")}${rose(92,86,40,"wine")}${rose(90,150,26,"rose")}
+        ${rose(160,70,16,"rose")}${rose(60,175,14,"wine")}`); })() },
+    hang: { ox:"55%", oy:"14%", src:(() => { seed = 23; return svgImg("0 0 200 320", `
+        <path d="M110 0Q100 120 120 250" stroke="#6d7a6f" stroke-width="1.2" fill="none"/>
+        ${eucalyptus(105,10,200,95)}${eucalyptus(120,20,160,70)}
+        ${leaf(110,60,55,150)}${leaf(112,110,50,30)}${leaf(115,170,45,160)}
+        ${berries(110,140,100)}
+        ${rose(110,40,32,"wine")}${rose(135,95,22,"blush")}${rose(95,135,18,"rose")}${rose(120,215,11,"wine")}`); })() }
+  };
+  document.querySelectorAll("[data-bouquet]").forEach(el => {
+    const b = BOUQUETS[el.dataset.bouquet];
+    el.innerHTML = `<div class="bloom" style="--ox:${b.ox};--oy:${b.oy}"><img alt="" src="${b.src}"></div>`;
+  });
+})();
+</script>
+</body>
+</html>
