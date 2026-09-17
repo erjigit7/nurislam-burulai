@@ -7,14 +7,14 @@
 <meta name="theme-color" content="#fbfaf8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Great+Vibes&family=Marck+Script&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Great+Vibes&family=Bad+Script&display=swap" rel="stylesheet">
 <style>
 :root{
   --paper:#fbfaf8; --paper-2:#f6f2ed; --ink:#2d2928; --muted:#766d69;
   --wine:#760d1d; --wine-2:#9e2a3d; --blush:#f3dcd5; --gold:#b89a6a;
   --serif:"Cormorant Garamond", Georgia, serif;
-  /* Marck Script: у Great Vibes заглавная «А» выглядит как строчная */
-  --script:"Marck Script", "Great Vibes", "Brush Script MT", cursive;
+  /* Bad Script: в нём есть Ү/Ө/Ң, а заглавная «А» читается как заглавная (у Great Vibes — нет) */
+  --script:"Bad Script", "Brush Script MT", cursive;
   --amp:"Great Vibes", "Brush Script MT", cursive;
   --soft:cubic-bezier(.22,.8,.24,1);
   --silk:cubic-bezier(.65,.05,.25,1);
@@ -119,7 +119,6 @@ button,input{font:inherit;color:inherit}
 section{position:relative;padding:72px 28px;text-align:center}
 .content{position:relative;z-index:1}
 .script{font-family:var(--serif);font-style:italic;color:var(--wine);font-weight:500;font-size:clamp(40px,11vw,50px);line-height:1.1;margin:0 0 18px;letter-spacing:-.01em}
-.kg-names .names span{font-family:var(--serif);font-style:italic;font-weight:500;font-size:clamp(46px,13vw,58px)}
 .kicker{text-transform:uppercase;letter-spacing:.32em;font-size:14px;color:var(--muted);margin:0}
 p{margin:0 0 14px}
 .muted{color:var(--muted)}
@@ -166,17 +165,19 @@ p{margin:0 0 14px}
   transition:stroke-dashoffset 3.2s var(--silk) .1s, fill-opacity 2s ease 1s}
 .hero-on .plaque>svg path{stroke-dashoffset:0;fill-opacity:.92}
 .names{font-family:var(--script);font-weight:400;color:var(--wine);margin:14px 0 18px;line-height:1}
-.names span{display:block;font-size:clamp(40px,12.5vw,64px)}
+.names span{display:block;font-size:clamp(44px,14vw,66px);line-height:1.25}
+/* у Bad Script хвосты букв ниже строки — маске «протяжки» нужен запас */
+.names span[data-a=wipe]{line-height:1.75}
 .names i{display:block;font-style:normal;font-family:var(--amp);font-size:34px;margin:4px 0;color:var(--gold);
   background:linear-gradient(110deg,#a88a5a 35%,#f6e7c4 50%,#a88a5a 65%);background-size:300% 100%;
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 5s ease-in-out infinite}
 @keyframes shimmer{0%{background-position:100% 0}60%,100%{background-position:0 0}}
-.hero .names span{clip-path:inset(-30% 100% -30% -12%);filter:blur(5px);opacity:.2;
+.hero .names span{clip-path:inset(-60% 100% -60% -12%);filter:blur(5px);opacity:.2;
   transition:clip-path 2.2s var(--silk), filter 2s ease, opacity 1.2s ease}
 .hero .names span:first-child{transition-delay:1.1s}
 .hero .names span:last-child{transition-delay:2.1s}
 .hero .names i{opacity:0;scale:.4;transition:opacity 1.2s ease 1.8s, scale 1.4s cubic-bezier(.3,1.5,.5,1) 1.8s}
-.hero-on .hero .names span{clip-path:inset(-30% -12% -30% -12%);filter:blur(0);opacity:1}
+.hero-on .hero .names span{clip-path:inset(-60% -12% -60% -12%);filter:blur(0);opacity:1}
 .hero-on .hero .names i{opacity:1;scale:1}
 .hero .kicker{--d:.5s}
 .hero-on .hero .kicker .ch{opacity:1;filter:blur(0);transform:none}
@@ -318,7 +319,7 @@ p{margin:0 0 14px}
      ====================================================================== -->
 <script>
 const CONFIG = {
-  groom: "Нурдоолот",
+  groom: "Нурдөөлөт",
   bride: "Арууке",
   date: "2026-10-04T16:00:00",          // дата и время начала (местное время)
   weekday: "Жекшемби",
@@ -501,7 +502,6 @@ const CONFIG = {
   document.querySelectorAll("[data-t]").forEach(el => el.textContent = C[el.dataset.t]);
   document.title = `${C.groom} & ${C.bride} — үйлөнүү тою, ${C.dateText}`;
   document.querySelectorAll(".seal .half").forEach(h => h.innerHTML = `<span class="mono">${C.groom[0]}&amp;${C.bride[0]}</span>`);
-  if (/[үөңҮӨҢ]/.test(C.groom + C.bride + C.hostName)) document.body.classList.add("kg-names");
   const dmy = `${pad(wedding.getDate())}.${pad(wedding.getMonth()+1)}.${wedding.getFullYear()}`;
   $("miniDate").textContent = dmy;
   $("heroDay").textContent = wedding.getDate();
