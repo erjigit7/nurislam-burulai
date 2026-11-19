@@ -319,12 +319,12 @@ p{margin:0 0 14px}
      ====================================================================== -->
 <script>
 const CONFIG = {
-  groom: "Нурдөөлөт",
-  bride: "Арууке",
-  date: "2026-10-04T16:00:00",          // дата и время начала (местное время)
-  weekday: "Жекшемби",
-  monthName: "Октябрь",                 // для заставки и календаря
-  dateText: "2026-жылдын 4-октябры",
+  groom: "Нурислам",
+  bride: "Бурулай",
+  date: "2026-12-03T16:00:00",          // дата и время начала (местное время)
+  weekday: "Бейшемби",
+  monthName: "Декабрь",                 // для заставки и календаря
+  dateText: "2026-жылдын 3-декабры",
 
   greeting: "Урматтуу коноктор!",
   invitation: [
@@ -332,8 +332,7 @@ const CONFIG = {
     "Бул кечти сиздер менен бирге өткөрсөк, абдан бактылуу болобуз."
   ],
 
-  hostName: "Бурулкан",                 // от чьего имени приглашение (в конце страницы)
-
+  hostName: "Алимжан & Разия",          // от чьего имени приглашение (в конце страницы)
   schedule: [
     ["16:00", "Конокторду тосуп алуу"],
     ["16:30", "Тойдун башталышы"],
@@ -342,11 +341,9 @@ const CONFIG = {
   ],
 
   venueType: "Ресторан",
-  venueName: "«Элегант»",
-  address: ["Куршаб айылы"],
-  mapUrl: "https://go.2gis.com/LUpAP",  // ссылка на место в 2GIS
+  venueName: "«Магнат»",
+  address: ["Ош шаары"],
 
-  phone: "+996 772 468 840",            // для звонка и WhatsApp
   music: "music.mp3",                   // ссылка на mp3 (или путь к файлу рядом), пусто = без кнопки музыки
   autoOpenSeconds: 5                    // через сколько секунд конверт откроется сам, если никто не нажал (0 = не открывать)
 };
@@ -423,11 +420,6 @@ const CONFIG = {
       <p class="venue-type" data-split data-a="letters" data-t="venueType" style="--d:.9s"></p>
       <p class="venue-name" data-a="up" data-t="venueName" style="--d:1.1s"></p>
       <p id="address" data-a="up" style="--d:1.3s"></p>
-      <div data-a="up" style="--d:1.5s">
-        <a class="btn" id="mapBtn" target="_blank" rel="noopener">
-          <svg class="pin" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5Z"/></svg>
-          2GIS'тен ачуу</a>
-      </div>
     </div>
   </section>
 
@@ -444,45 +436,13 @@ const CONFIG = {
     </div>
   </section>
 
-  <section>
-    <div class="content">
-      <p class="script" data-a="wipe">Суроолоруңуз барбы?</p>
-      <p data-a="up" style="--d:.3s">Эгер суроолоруңуз болсо, бизге жазыңыздар — кубануу менен жооп беребиз.</p>
-      <div data-a="up" style="--d:.5s"><a class="btn ghost" id="callBtn"></a></div>
-    </div>
-  </section>
-
-  <section>
-    <div class="flora sway" data-bouquet="hang" style="right:-40px;top:-30px;width:170px"></div>
-    <div class="frame content" data-a="frame">
-      <p class="script" data-a="wipe" style="--d:.4s">Анкета</p>
-      <p data-a="up" style="--d:.7s">Өзгөчө күнүбүзгө даярдана алышыбыз үчүн катышарыңызды ырастап коюуңузду өтүнөбүз.</p>
-      <form id="rsvp" novalidate data-a="up" style="--d:.9s">
-        <div class="field">
-          <label class="lbl" for="guestName">Сиздин атыңыз</label>
-          <input type="text" id="guestName" autocomplete="name" placeholder="Аты-жөнүңүз">
-        </div>
-        <div class="field">
-          <span class="lbl">Катышасызбы?</span>
-          <label class="choice"><input type="radio" name="ans" value="Сөзсүз келем"> Сөзсүз келем</label>
-          <label class="choice"><input type="radio" name="ans" value="Жубайым менен келем"> Жубайым менен келем</label>
-          <label class="choice"><input type="radio" name="ans" value="Тилекке каршы, келе албайм"> Тилекке каршы, келе албайм</label>
-        </div>
-        <p class="err" id="err"></p>
-        <button class="btn" type="submit">Катышууну ырастоо</button>
-        <p class="note">Ырастоо WhatsApp аркылуу жөнөтүлөт.</p>
-      </form>
-    </div>
-  </section>
-
   <section class="final" id="final">
     <div class="sparks" data-sparks="10"></div>
     <div class="flora" data-bouquet="corner" style="left:-80px;bottom:-40px;width:260px"></div>
     <div class="flora" data-bouquet="corner" style="right:-80px;top:-40px;width:230px;--t:rotate(180deg);--d:.6s"></div>
     <div class="content">
       <p class="muted" data-a="up">Урматтоо менен,</p>
-      <h2 class="names"><span data-a="wipe" data-t="hostName" style="--d:.3s"></span></h2>
-      <p class="script" data-a="wipe" style="font-size:40px;margin:10px 0 4px;--d:1.3s">Сиздерди күтөбүз!</p>
+      <h2 class="names"><span data-a="wipe" data-t="hostName" style="--d:.3s"></span></h2>      <p class="script" data-a="wipe" style="font-size:40px;margin:10px 0 4px;--d:1.3s">Сиздерди күтөбүз!</p>
       <p class="year" id="finalDate" data-a="up" style="--d:1.9s"></p>
     </div>
   </section>
@@ -511,10 +471,6 @@ const CONFIG = {
   $("invitation").innerHTML = C.invitation.map((t,i) => `<p data-a="up" style="--d:${1 + i*.35}s">${t}</p>`).join("");
   $("timeline").innerHTML = C.schedule.map(([t,s],i) => `<div class="tl-item" style="--i:${i}"><time>${t}</time><span>${s}</span></div>`).join("");
   $("address").innerHTML = C.address.join("<br>");
-  $("mapBtn").href = C.mapUrl;
-  const digits = C.phone.replace(/\D/g,"");
-  $("callBtn").href = "tel:+" + digits;
-  $("callBtn").textContent = C.phone;
 
   // ---------- split letters
   document.querySelectorAll("[data-split]").forEach(el => {
@@ -559,22 +515,6 @@ const CONFIG = {
     setTimeout(tick, 1000);
   }
   tick();
-
-  // ---------- RSVP -> WhatsApp
-  $("rsvp").addEventListener("submit", e => {
-    e.preventDefault();
-    const name = $("guestName").value.trim();
-    const ans = (document.querySelector("input[name=ans]:checked") || {}).value;
-    const err = $("err");
-    const fail = t => { err.textContent = t; err.classList.remove("shake"); void err.offsetWidth; err.classList.add("shake"); };
-    if (!name) return fail("Атыңызды жазыңыз");
-    if (!ans) return fail("Жоопту тандаңыз");
-    err.textContent = "";
-    const r = e.submitter ? e.submitter.getBoundingClientRect() : null;
-    if (r) Petals.burst(r.left + r.width/2, r.top, 26);
-    const msg = `Салам! Мен, ${name}. ${C.groom} & ${C.bride} — үйлөнүү тою (${C.dateText}): ${ans}.`;
-    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(msg)}`, "_blank");
-  });
 
   // ---------- music
   // Браузеры не дают включить звук без касания пользователя: если конверт открылся сам,
